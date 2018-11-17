@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Params } from '@angular/router';
 import { Subscription } from 'rxjs';
 
@@ -10,24 +10,33 @@ import { RecipeService } from '../recipe.service';
   templateUrl: './recipe-detail.component.html',
   styleUrls: ['./recipe-detail.component.css']
 })
-export class RecipeDetailComponent implements OnInit {
+export class RecipeDetailComponent implements OnInit, OnDestroy {
   recipe: Recipe;
+  id: number;
   paramsSubscription: Subscription;
 
-  constructor(private recipeService: RecipeService, private route: ActivatedRoute) { }
+  constructor(private recipeService: RecipeService,
+              private route: ActivatedRoute) {
+  }
 
   ngOnInit() {
-    this.recipe = this.recipeService.getRecipes()[this.route.snapshot.params['id']];
+    const id = this.route.snapshot.params['id'];
+    this.recipe = this.recipeService.getRecipes()[id];
     this.paramsSubscription = this.route.params
       .subscribe(
         (params: Params) => {
-          this.recipe = this.recipeService.getRecipes()[params['id']];
+          this.id = +params['id'];
+          this.recipe = this.recipeService.getRecipe(this.id);
         }
       );
   }
 
   onAddToShoppingList() {
     this.recipeService.addIngredientsToShoppingList(this.recipe.ingredients);
+  }
+
+  ngOnDestroy() {
+    this.paramsSubscription.unsubscribe();
   }
 
 }
